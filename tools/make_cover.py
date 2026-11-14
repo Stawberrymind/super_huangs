@@ -97,7 +97,7 @@ def text(s, size, y, fill, font='PixelOperator8-Bold.ttf'):
             if abs(ox) + abs(oy) <= 3:
                 stamp(m, (20, 24, 30, 255), ox, oy)  # outline
     stamp(m, fill, 0, 0)
-text('GEE PEE YOU', 24, 18, (118, 186, 0, 255))
+text('SUPER HUANGS', 24, 18, (118, 186, 0, 255))
 text('COLLECT EVERY GPU - RESCUE THE PRINCESS', 8, 54, (255, 255, 255, 255))
 
 out = img.resize((W * 2, H * 2), Image.NEAREST).convert('RGB')
