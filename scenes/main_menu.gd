@@ -18,7 +18,6 @@ const CONTROLS := [
 
 var _controls_screen: Control
 var _controls_button: Button
-var _fullscreen_button: Button
 
 func _ready() -> void:
 	RenderingServer.set_default_clear_color(Color(0.05, 0.06, 0.07))
@@ -55,12 +54,6 @@ func _ready() -> void:
 	_controls_button.pressed.connect(_show_controls)
 	_buttons.add_child(_controls_button)
 
-	_fullscreen_button = Button.new()
-	_fullscreen_button.pressed.connect(Fullscreen.toggle)
-	Fullscreen.changed.connect(_update_fullscreen_text)
-	_update_fullscreen_text(Fullscreen.is_fullscreen())
-	_buttons.add_child(_fullscreen_button)
-
 	_controls_screen = _build_controls_screen()
 	_controls_screen.hide()
 	add_child(_controls_screen)
@@ -71,9 +64,6 @@ func _ready() -> void:
 func _unhandled_key_input(event: InputEvent) -> void:
 	if event.pressed and not event.echo and event.keycode == KEY_ESCAPE and _controls_screen.visible:
 		_hide_controls()
-
-func _update_fullscreen_text(on: bool) -> void:
-	_fullscreen_button.text = "Exit Fullscreen" if on else "Fullscreen"
 
 func _start_level(scene: String) -> void:
 	get_tree().change_scene_to_file(scene)

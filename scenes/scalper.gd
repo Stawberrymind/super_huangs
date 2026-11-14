@@ -29,6 +29,7 @@ var _flee_time := 0.0
 var _steal_cooldown := 0.0
 var _hint_cooldown := 0.0
 var _bob := 0.0
+var _player_feet_before := INF   # the knight's feet last frame, for stomp detection
 
 var _loot: Sprite2D
 
@@ -97,11 +98,16 @@ func _physics_process(delta: float) -> void:
 		if body is CharacterBody2D and body.is_in_group("player"):
 			_touch(body)
 			return
+	if player:
+		_player_feet_before = player.global_position.y
 
 func _touch(player: CharacterBody2D) -> void:
 	var level := get_tree().get_first_node_in_group("level")
-	# Landing on its head knocks it out.
-	if player.velocity.y > 0.0 and player.global_position.y < global_position.y - 8.0:
+	# Landing on its head knocks it out: he's coming down and last frame his
+	# feet were still above its head (a falling knight moves several pixels a
+	# frame, so checking only where he is now misses most stomps).
+	var head := global_position.y - 10.0
+	if player.velocity.y > 0.0 and minf(_player_feet_before, player.global_position.y - 4.0) <= head:
 		player.velocity.y = -230.0
 		take_hit()
 		return
