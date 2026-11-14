@@ -15,10 +15,14 @@ run/main_scene="res://scenes/main_menu.tscn"
 config/features=PackedStringArray("4.7", "Forward Plus")
 config/icon="res://icon.svg"
 
+[autoload]
+
+Fullscreen="*res://scenes/fullscreen.gd"
+
 [display]
 
 window/stretch/mode="canvas_items"
-window/stretch/aspect="expand"
+window/stretch/aspect="keep"
 
 [physics]
 
