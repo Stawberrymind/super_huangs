@@ -22,7 +22,7 @@
 
 
 
-## The princess is trapped in the NEVADA castle, and the only way in is with **every RTX 5090 in the level**. Jump across rooftops, climb server towers, slay sword-only guard ducks, and stomp scalpers before they run off with your GPUs.
+## A super mario inspired platformer where you play as Jason Huang, Founding CEO of NEVADA from 1993-2026. Your objective is to save your princess from the evil Donald Duck who's blonde. Bounce (Jump) on the exclamation boxes (!) to receive a power up (sword / double jump) and get bounced back to spawn in order to progress. Reach the Nevada castle to save your princess! Collect RTX 5090s on the way as you do so! (in this economy?!)
 
 ## About the game
 
@@ -51,7 +51,7 @@
 | 5 | Mainframe Core | 2:30 |
 | 6 | The Cloud | 4:00 |
 
-## ⌨️ Controls
+## Controls
 
 | Key | Action |
 |-----|--------|
