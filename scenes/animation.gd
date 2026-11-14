@@ -1,7 +1,18 @@
 extends AnimatedSprite2D
 
+func _process(_delta: float) -> void:
+	var player = get_parent()
 
-# Called when the node enters the scene tree for the first time.
-func _ready() -> void:
-	play("idle")
-	pass # Replace with function body.
+	# Flip sprite based on movement direction
+	if player.velocity.x < 0:
+		flip_h = true
+	elif player.velocity.x > 0:
+		flip_h = false
+
+	# Handle animations
+	if not player.is_on_floor():
+		play("jump")
+	elif abs(player.velocity.x) > 0:
+		play("run")
+	else:
+		play("idle")
