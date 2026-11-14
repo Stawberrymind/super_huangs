@@ -1,6 +1,7 @@
 extends Control
 
 const Levels = preload("res://scenes/levels.gd")
+const Progress = preload("res://scenes/progress.gd")
 const GREEN = Color(0.46, 0.73, 0)
 const CONTROLS := [
 	["A / D", "Move"],
@@ -24,6 +25,9 @@ func _ready() -> void:
 		var level: Dictionary = Levels.LIST[i]
 		var button := Button.new()
 		button.text = "Level %d - %s" % [i + 1, level["name"]]
+		var saved := Progress.get_level(i + 1)
+		if not saved.is_empty():
+			button.text += "   BEST %s" % Progress.format_time(saved["best_time"])
 		button.pressed.connect(_start_level.bind(level["scene"]))
 		_buttons.add_child(button)
 

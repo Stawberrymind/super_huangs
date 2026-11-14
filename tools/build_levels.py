@@ -1,4 +1,4 @@
-"""Generates scenes/world_tileset.tres, scenes/level_2.tscn and scenes/level_3.tscn
+"""Generates scenes/world_tileset.tres and scenes/level_2.tscn ... level_5.tscn
 (tiles, coins, ducks, "!" boxes, princess and castle).
 
 Usage (from the project root):
@@ -230,6 +230,103 @@ def level_3():
     )
 
 
+# ---------------------------------------------------------------- level 4: Neon Rooftops
+# Harder. Rooftop hopping over a bottomless street under the cyberpunk sky.
+# The double jump "!" box is three roofs in; the sword "!" box floats high
+# above the fourth roof (and bounces you all the way back), and a blonde
+# guard blocks a low corridor just before the princess.
+def level_4():
+    lv = Level()
+    bottom = 6
+    lv.ground(-4, 6, 0, bottom, STONE_TOP, STONE)        # start roof
+    lv.fill(-4, -4, -4, -1, STONE)
+    lv.put(-4, -5, STONE_TOP)
+    lv.ground(10, 14, -2, bottom, STONE_TOP, STONE)      # 3-gap, 2 up
+    lv.ground(18, 21, 0, bottom, STONE_TOP, STONE)       # 3-gap, 2 down
+    lv.boxes.append((20, -1, DOUBLE_JUMP))
+    lv.ground(28, 31, -3, bottom, STONE_TOP, STONE)      # 6-gap: double jump
+    lv.boxes.append((30, -7, SWORD))                     # floating 4 tiles above the roof
+    lv.fill(35, 36, -6, -6, BRICK_TOP)                   # narrow ledges
+    lv.fill(40, 41, -4, -4, BRICK_TOP)
+    lv.fill(45, 46, -7, -7, BRICK_TOP)
+    lv.ground(50, 56, -2, bottom, STONE_TOP, STONE)      # duck roof
+    lv.ground(62, 92, -1, bottom, STONE_TOP, STONE)      # 5-gap, then the last roof
+    lv.fill(68, 72, -7, -4, STONE)                       # low corridor: no jumping over the guard
+    lv.fill(68, 72, -8, -8, STONE_TOP)
+    lv.fill(92, 92, -5, -2, STONE)
+    lv.put(92, -6, STONE_TOP)
+
+    lv.castle(80, 90, -1, 85)
+    lv.flag(77, -1, 5)
+
+    lv.put(2, -1, MONITOR)
+    lv.rack(-2, 0, 3)
+    lv.put(12, -3, CHIP)
+    lv.rack(28, -3, 3)
+    lv.put(53, -3, FAN)
+    lv.rack(64, -1, 4)
+    lv.put(66, -2, HEATSINK)
+
+    lv.coins += [(2, -3), (4, -3), (8, -3), (12, -5), (16, -3), (17, -3), (24, -6), (25, -6),
+                 (35, -8), (36, -8), (40, -6), (41, -6), (45, -9), (46, -9), (52, -4), (54, -4),
+                 (59, -4), (70, -2), (75, -3)]
+    lv.ducks += [(12, -2, False, 24), (29, -3, False, 16), (51, -2, False, 24),
+                 (55, -2, False, 24), (64, -1, False, 32), (70, -1, True, 0)]
+    return dict(
+        file='level_4.tscn', node='level_4', number=4, level=lv,
+        player=feet(0, 0), princess=princess_at(74, -1), castle_door=feet(85, -1),
+        kill_y=(bottom + 6) * T, background=(0.04, 0.02, 0.10), sky=1,
+    )
+
+
+# ---------------------------------------------------------------- level 5: Mainframe Core
+# Hardest. A climb up narrow ledges over a pit, the sword high up on a ledge
+# (bounce back = climb again), two blonde guards in sealed corridors and lots
+# of ducks on small platforms.
+def level_5():
+    lv = Level()
+    bottom = 4
+    lv.ground(-3, 8, 0, bottom, STONE_TOP, STONE)        # start
+    lv.fill(-3, -3, -4, -1, STONE)
+    lv.put(-3, -5, STONE_TOP)
+    lv.boxes.append((7, -1, DOUBLE_JUMP))
+    lv.fill(13, 14, -2, -2, BRICK_TOP)                   # climbing ledges
+    lv.fill(19, 20, -5, -5, BRICK_TOP)
+    lv.fill(24, 25, -9, -9, BRICK_TOP)
+    lv.fill(29, 31, -9, -9, BRICK_TOP)                   # duck ledge
+    lv.fill(36, 37, -6, -6, BRICK_TOP)
+    lv.boxes.append((36, -10, SWORD))                    # 4 above the ledge: double jump
+    lv.ground(41, 48, -4, bottom, STONE_TOP, STONE)      # first guard
+    lv.fill(43, 46, -20, -7, STONE)                      # sealed corridor
+    lv.fill(55, 57, -6, -6, BRICK_TOP)                   # 6-gap: double jump
+    lv.fill(62, 63, -2, -2, BRICK_TOP)
+    lv.ground(67, 92, -4, bottom, STONE_TOP, STONE)      # last stretch
+    lv.fill(69, 71, -20, -7, STONE)                      # second guard's corridor
+    lv.fill(92, 92, -8, -5, STONE)
+    lv.put(92, -9, STONE_TOP)
+
+    lv.castle(81, 91, -4, 86)
+    lv.flag(79, -4, 5)
+
+    lv.put(1, -1, MONITOR)
+    lv.rack(3, 0, 3)
+    lv.put(42, -5, CHIP)
+    lv.put(47, -5, HEATSINK)
+    lv.put(74, -5, FAN)
+    lv.rack(76, -4, 3)
+
+    lv.coins += [(4, -4), (10, -3), (11, -3), (13, -4), (16, -6), (17, -6), (19, -7), (22, -10),
+                 (24, -11), (27, -11), (30, -11), (33, -9), (36, -8), (39, -7), (45, -5),
+                 (51, -7), (52, -7), (56, -8), (60, -5), (62, -4), (65, -4), (70, -5), (77, -7)]
+    lv.ducks += [(30, -9, False, 12), (42, -4, False, 8), (45, -4, True, 0),
+                 (68, -4, False, 8), (70, -4, True, 0), (74, -4, False, 32)]
+    return dict(
+        file='level_5.tscn', node='level_5', number=5, level=lv,
+        player=feet(0, 0), princess=princess_at(77, -4), castle_door=feet(86, -4),
+        kill_y=(bottom + 6) * T, background=(0.04, 0.02, 0.10), sky=1,
+    )
+
+
 # ---------------------------------------------------------------- writers
 def write_tileset():
     """Pulls the tileset out of game.tscn so the new levels share one copy."""
@@ -265,6 +362,7 @@ script = ExtResource("1_level")
 level_number = {number}
 kill_y = {kill_y}.0
 background_color = Color({bg}, 1)
+sky = {sky}
 castle_door = Vector2({dx}, {dy})
 
 [node name="TileMap" type="TileMap" parent="."]
@@ -318,6 +416,7 @@ def write_level(spec):
     text = SCENE.format(
         node=spec['node'], number=spec['number'], kill_y=spec['kill_y'],
         bg=', '.join(str(c) for c in spec['background']),
+        sky=spec.get('sky', 0),
         layers=layers,
         px=spec['player'][0], py=spec['player'][1],
         qx=spec['princess'][0], qy=spec['princess'][1],
@@ -354,7 +453,7 @@ def preview(spec, out_dir):
 
 if __name__ == '__main__':
     write_tileset()
-    for spec in (level_2(), level_3()):
+    for spec in (level_2(), level_3(), level_4(), level_5()):
         write_level(spec)
         print('wrote scenes/' + spec['file'], '(%d tiles)' % len(spec['level'].cells))
         if len(sys.argv) > 1:

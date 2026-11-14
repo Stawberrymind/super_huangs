@@ -9,4 +9,6 @@ const LIST := [
 	{"name": "Nvidia Castle", "scene": "res://scenes/game.tscn"},
 	{"name": "Server Farm", "scene": "res://scenes/level_2.tscn"},
 	{"name": "Overclock Tower", "scene": "res://scenes/level_3.tscn"},
+	{"name": "Neon Rooftops", "scene": "res://scenes/level_4.tscn"},
+	{"name": "Mainframe Core", "scene": "res://scenes/level_5.tscn"},
 ]

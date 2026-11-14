@@ -9,6 +9,8 @@ extends Node2D
 #   flag comes down) -> "Level complete" screen.
 
 const Levels = preload("res://scenes/levels.gd")
+const Progress = preload("res://scenes/progress.gd")
+const CyberSky = preload("res://scenes/cyber_sky.gd")
 const UI_THEME = preload("res://scenes/ui_theme.tres")
 const HEART = preload("res://assets/sprites/heart.png")
 const GPU = preload("res://assets/sprites/rtx5090.png")
@@ -32,6 +34,8 @@ const LAYER_PLAYER = 2
 ## The knight dies when falling below this y position (in pixels).
 @export var kill_y: float = 400.0
 @export var background_color: Color = Color(0.3, 0.3, 0.3)
+## Backdrop drawn behind the level.
+@export_enum("Plain", "Cyberpunk") var sky: int = 0
 ## Where the knight's feet are when he stands in the castle doorway (in pixels).
 @export var castle_door: Vector2 = Vector2.ZERO
 
@@ -39,6 +43,7 @@ var completed := false
 var princess_rescued := false
 var coins := 0
 var total_coins := 0
+var elapsed := 0.0   # level timer, saved as the best time
 
 var _player: CharacterBody2D
 var _princess: CharacterBody2D
@@ -66,6 +71,8 @@ func _ready() -> void:
 	_princess = $Princess
 	total_coins = get_tree().get_nodes_in_group("coins").size()
 
+	if sky == 1:
+		add_child(CyberSky.new())
 	_add_goal(_princess)
 	_add_door()
 	_setup_flags()
@@ -84,6 +91,7 @@ func _physics_process(delta: float) -> void:
 	if _ending:
 		_update_ending(delta)
 		return
+	elapsed += delta
 	if _player.global_position.y > kill_y and not _player.is_bouncing():
 		_player.kill()
 	if _door_area and _door_area.overlaps_body(_player) and _player.is_on_floor():
@@ -220,8 +228,15 @@ func _update_ending(delta: float) -> void:
 
 func _complete() -> void:
 	completed = true
+	var best := Progress.get_level(level_number)
+	var new_best := Progress.record(level_number, elapsed, coins, total_coins)
 	await get_tree().create_timer(0.8).timeout
-	_win_coins.text = "RTX 5090s: %d/%d" % [coins, total_coins]
+	var time_text := "Time: %s" % Progress.format_time(elapsed)
+	if new_best and not best.is_empty():
+		time_text += "  NEW BEST!"
+	elif not best.is_empty():
+		time_text += "  (best %s)" % Progress.format_time(best["best_time"])
+	_win_coins.text = "RTX 5090s: %d/%d\n%s" % [coins, total_coins, time_text]
 	_win_screen.show()
 	var buttons := _win_screen.find_children("*", "Button", true, false)
 	for button in buttons:
