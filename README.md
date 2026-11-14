@@ -40,6 +40,27 @@
 - **Cyberpunk skies** with parallax neon skylines in the later levels
 - **Fullscreen** that keeps the same view, just bigger
 
+## Screenshots
+
+<table>
+  <tr>
+    <td><img src="screenshots/level1_nvidia_castle.png" alt="Level 1 - Nvidia Castle: grabbing the sword from a ! box"></td>
+    <td><img src="screenshots/level2_server_farm.png" alt="Level 2 - Server Farm: crossing the bridge past the ducks"></td>
+  </tr>
+  <tr>
+    <td align="center"><sub>Level 1 – Nvidia Castle</sub></td>
+    <td align="center"><sub>Level 2 – Server Farm</sub></td>
+  </tr>
+  <tr>
+    <td><img src="screenshots/level2_castle.webp" alt="Level 2 - leading the princess to the castle"></td>
+    <td><img src="screenshots/level3_overclock_tower.webp" alt="Level 3 - Overclock Tower: the castle at the top of the tower"></td>
+  </tr>
+  <tr>
+    <td align="center"><sub>Level 2 – Leading the princess home</sub></td>
+    <td align="center"><sub>Level 3 – Overclock Tower</sub></td>
+  </tr>
+</table>
+
 ## Levels
 
 | # | Level | Target time |
