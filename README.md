@@ -9,7 +9,7 @@
 [![Godot 4.7](https://img.shields.io/badge/Godot-4.7-478cbf?style=for-the-badge&logo=godotengine&logoColor=white)](https://godotengine.org)
 [![GDScript](https://img.shields.io/badge/GDScript-355570?style=for-the-badge&logo=godotengine&logoColor=white)](https://docs.godotengine.org/en/stable/tutorials/scripting/gdscript/index.html)
 [![Platform: Web](https://img.shields.io/badge/Platform-Web-76b900?style=for-the-badge&logo=html5&logoColor=white)](#)
-[![itch.io](https://img.shields.io/badge/Play_on-itch.io-fa5c5c?style=for-the-badge&logo=itchdotio&logoColor=white)](https://YOUR-NAME.itch.io/super-huangs)
+[![itch.io](https://img.shields.io/badge/Play_on-itch.io-fa5c5c?style=for-the-badge&logo=itchdotio&logoColor=white)](https://fourtysevencode.itch.io/super-huangs)
 
 ![Levels](https://img.shields.io/badge/levels-6-76b900?style=flat-square)
 ![Last commit](https://img.shields.io/github/last-commit/Stawberrymind/haven_game?style=flat-square&color=76b900)
