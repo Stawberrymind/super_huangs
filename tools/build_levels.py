@@ -26,7 +26,7 @@ T = 16
 GRASS, DIRT = (0, 0), (0, 1)
 STONE_TOP, STONE = (8, 0), (8, 1)
 BRICK_TOP, BRICK = (5, 0), (5, 1)
-Q_BLOCK, E_BLOCK = (7, 2), (8, 2)
+E_BLOCK = (8, 2)
 BRIDGE_L, BRIDGE_M, BRIDGE_R = (9, 0), (10, 0), (11, 0)
 # decoration (no collision)
 FLAG_TOP, FLAG_POLE, FLAG_BASE = (10, 3), (10, 5), (10, 7)
@@ -38,7 +38,7 @@ BATTLEMENT = (13, 3)
 DOOR_TOP, DOOR_BOTTOM, PLAQUE = (11, 4), (11, 5), (15, 4)
 ROOF_TIP, ROOF_L, ROOF_M, ROOF_R = (13, 4), (12, 5), (13, 5), (14, 5)
 SWORD, DOUBLE_JUMP = 0, 1   # bounce_box.gd Power values
-SOLID = {GRASS, DIRT, STONE_TOP, STONE, BRICK_TOP, BRICK, Q_BLOCK, E_BLOCK, BRIDGE_L, BRIDGE_M, BRIDGE_R}
+SOLID = {GRASS, DIRT, STONE_TOP, STONE, BRICK_TOP, BRICK, E_BLOCK, BRIDGE_L, BRIDGE_M, BRIDGE_R}
 
 
 class Level:
@@ -126,57 +126,64 @@ def princess_at(x, floor):
 
 # ---------------------------------------------------------------- level 2: Server Farm
 # Needs the DOUBLE JUMP: the "!" box before the wide pit hands it out (and
-# bounces you back to the start); the wide pit and the mesa wall need it.
+# bounces you back to the start, so it sits a couple of pits in to make the
+# trip back take some effort); the wide pit and the mesa wall need it.
 def level_2():
     lv = Level()
     bottom = 5
+    s = 9                                   # everything after the "!" box moved right by this
     lv.ground(-6, 8, 0, bottom)
-    lv.ground(11, 17, 0, bottom)            # 2-wide pit before it
-    lv.boxes.append((14, -1, DOUBLE_JUMP))  # sits on the ground: hop over it or onto it
-    lv.ground(24, 28, 0, bottom)            # 6-wide pit: double jump only
-    lv.bridge(29, 34, 0)
-    lv.ground(35, 39, 0, bottom)
-    lv.ground(40, 47, -4, bottom, STONE_TOP, STONE)   # 4-high wall: double jump only
-    lv.fill(50, 52, -2, -2, BRICK_TOP)      # and back down
-    lv.ground(55, 78, 0, bottom)
+    lv.ground(11, 17, 0, bottom)            # 2-wide pit
+    lv.fill(14, 15, -2, -2, BRICK_TOP)      # little step on the way
+    lv.ground(20, 26, 0, bottom)            # 2-wide pit again
+    lv.boxes.append((24, -1, DOUBLE_JUMP))  # sits on the ground: hop over it or onto it
+    lv.ground(24 + s, 28 + s, 0, bottom)    # 6-wide pit: double jump only
+    lv.bridge(29 + s, 34 + s, 0)
+    lv.ground(35 + s, 39 + s, 0, bottom)
+    lv.ground(40 + s, 47 + s, -4, bottom, STONE_TOP, STONE)   # 4-high wall: double jump only
+    lv.fill(50 + s, 52 + s, -2, -2, BRICK_TOP)                # and back down
+    lv.ground(55 + s, 78 + s, 0, bottom)
 
     lv.fill(-6, -6, -4, -1, STONE)          # wall so you can't walk off the left edge
-    lv.fill(78, 78, -4, -1, STONE)
+    lv.fill(78 + s, 78 + s, -4, -1, STONE)
     lv.put(-6, -5, STONE_TOP)
-    lv.put(78, -5, STONE_TOP)
+    lv.put(78 + s, -5, STONE_TOP)
 
-    lv.castle(63, 73, 0, 68)
+    lv.castle(63 + s, 73 + s, 0, 68 + s)
 
     lv.rack(-4, 0, 4)
     lv.rack(-3, 0, 3)
     lv.put(4, -1, MONITOR)
     lv.put(6, -1, BUSH)
     lv.rack(12, 0, 3)
-    lv.put(16, -1, HEATSINK)
-    lv.put(25, -1, ROCK)
-    lv.put(36, -1, MONITOR)
-    lv.rack(45, -4, 4)
-    lv.rack(46, -4, 4)
-    lv.put(42, -5, GPU_L)
-    lv.put(43, -5, GPU_R)
-    lv.put(57, -1, BUSH)
-    lv.flag(61, 0, 5)
-    lv.put(76, -1, ROCK)
+    lv.put(17, -1, HEATSINK)
+    lv.rack(21, 0, 3)
+    lv.put(25 + s, -1, ROCK)
+    lv.put(36 + s, -1, MONITOR)
+    lv.rack(45 + s, -4, 4)
+    lv.rack(46 + s, -4, 4)
+    lv.put(42 + s, -5, GPU_L)
+    lv.put(43 + s, -5, GPU_R)
+    lv.put(57 + s, -1, BUSH)
+    lv.flag(61 + s, 0, 5)
+    lv.put(76 + s, -1, ROCK)
 
-    lv.coins += [(3, -2), (5, -2), (9, -3), (10, -3), (20, -4), (21, -4), (26, -3),
-                 (31, -2), (32, -2), (42, -7), (43, -7), (51, -4), (56, -2)]
-    lv.ducks += [(26, 0, False, 24), (37, 0, False, 24), (43, -4, False, 40)]
+    lv.coins += [(3, -2), (5, -2), (9, -3), (10, -3), (14, -4), (15, -4), (18, -3), (19, -3)]
+    lv.coins += [(x + s, y) for x, y in [(20, -4), (21, -4), (26, -3), (31, -2), (32, -2),
+                                         (42, -7), (43, -7), (51, -4), (56, -2)]]
+    lv.ducks += [(26 + s, 0, False, 24), (37 + s, 0, False, 24), (43 + s, -4, False, 40)]
     return dict(
         file='level_2.tscn', node='level_2', number=2, level=lv,
-        player=feet(0, 0), princess=princess_at(59, 0), castle_door=feet(68, 0),
+        player=feet(0, 0), princess=princess_at(59 + s, 0), castle_door=feet(68 + s, 0),
         kill_y=(bottom + 6) * T, background=(0.07, 0.09, 0.11),
     )
 
 
 # ---------------------------------------------------------------- level 3: Overclock Tower
-# Needs BOTH power-ups. Two "!" boxes at the bottom: the double jump (left) for
-# the 4-tile steps, and the sword (right, needs the double jump to reach) for
-# the blonde duck guarding the corridor near the top.
+# Needs BOTH power-ups. The double jump "!" box (bottom left) is for the 4-tile
+# steps; the sword "!" box sits halfway up the tower, and since it bounces you
+# back to the start you have to climb up again to beat the blonde duck
+# guarding the corridor near the top.
 def level_3():
     lv = Level()
     top = -19                                # the floor with the princess and the castle
@@ -191,10 +198,10 @@ def level_3():
     lv.put(19, roof - 1, BATTLEMENT)
 
     lv.boxes.append((2, -1, DOUBLE_JUMP))
-    lv.boxes.append((17, -4, SWORD))
 
     lv.fill(5, 8, -4, -4, BRICK_TOP)         # 4 tiles up each time: double jump only
     lv.fill(12, 15, -8, -8, BRICK_TOP)
+    lv.boxes.append((15, -9, SWORD))        # halfway up
     lv.fill(1, 10, -12, -12, STONE_TOP)      # the guarded floor
     lv.fill(4, 8, -18, -15, STONE)           # low ceiling: no jumping over the guard
     lv.ducks.append((6, -12, True, 0))
@@ -210,7 +217,7 @@ def level_3():
     lv.rack(11, 0, 3)
     lv.rack(12, 0, 2)
     lv.put(6, -5, MONITOR)
-    lv.put(15, -9, FAN)
+    lv.put(17, -5, FAN)
     lv.put(10, -13, CHIP)
     lv.flag(5, top, 4)
 

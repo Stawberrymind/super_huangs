@@ -5,7 +5,8 @@ extends Node2D
 # every level: the HUD (health, RTX 5090s, power-ups), respawning, restarting,
 # going back to the menu, and the ending:
 #   knight reaches the princess -> hearts, she follows him ->
-#   both walk into the castle door -> "Level complete" screen.
+#   with every RTX 5090 collected, both walk into the castle door (and the
+#   flag comes down) -> "Level complete" screen.
 
 const Levels = preload("res://scenes/levels.gd")
 const UI_THEME = preload("res://scenes/ui_theme.tres")
@@ -13,6 +14,9 @@ const HEART = preload("res://assets/sprites/heart.png")
 const GPU = preload("res://assets/sprites/rtx5090.png")
 const SWORD_ICON = preload("res://assets/sprites/sword.png")
 const DOUBLE_JUMP_ICON = preload("res://assets/sprites/double_jump.png")
+const WORLD_TILES = preload("res://assets/sprites/world_tileset.png")
+const FLAG_TOP := Vector2i(10, 3)
+const FLAG_BASE := Vector2i(10, 7)
 const SOUNDS = {
 	"coin": preload("res://assets/sounds/coin.wav"),
 	"hurt": preload("res://assets/sounds/hurt.wav"),
@@ -25,7 +29,7 @@ const LAYER_PLAYER = 2
 
 ## Which level this is (1 = first entry in levels.gd).
 @export var level_number: int = 1
-## The player respawns when falling below this y position (in pixels).
+## The knight dies when falling below this y position (in pixels).
 @export var kill_y: float = 400.0
 @export var background_color: Color = Color(0.3, 0.3, 0.3)
 ## Where the knight's feet are when he stands in the castle doorway (in pixels).
@@ -53,6 +57,7 @@ var _message: Label
 var _message_tween: Tween
 var _win_screen: Control
 var _win_coins: Label
+var _flags: Array = []   # [cloth sprite, y to lower it to]
 
 func _ready() -> void:
 	add_to_group("level")
@@ -63,6 +68,7 @@ func _ready() -> void:
 
 	_add_goal(_princess)
 	_add_door()
+	_setup_flags()
 	_build_hud()
 
 	_player.health_changed.connect(_update_health)
@@ -79,12 +85,14 @@ func _physics_process(delta: float) -> void:
 		_update_ending(delta)
 		return
 	if _player.global_position.y > kill_y and not _player.is_bouncing():
-		_player.respawn()
+		_player.kill()
 	if _door_area and _door_area.overlaps_body(_player) and _player.is_on_floor():
-		if princess_rescued:
-			_start_ending()
-		else:
+		if not princess_rescued:
 			show_message("Rescue the princess first!")
+		elif coins < total_coins:
+			show_message("Collect all the RTX 5090s first! (%d/%d)" % [coins, total_coins])
+		else:
+			_start_ending()
 
 func _process(delta: float) -> void:
 	# Little hearts above the two of them once they have met.
@@ -198,6 +206,7 @@ func _start_ending() -> void:
 	var door_x := castle_door.x if _door_area else _player.global_position.x
 	_player.walk_to(door_x)
 	_princess.walk_to(door_x)
+	_lower_flags()
 
 func _update_ending(delta: float) -> void:
 	_ending_time += delta
@@ -218,6 +227,44 @@ func _complete() -> void:
 	for button in buttons:
 		button.disabled = false
 	buttons[0].grab_focus()
+
+# ---------------------------------------------------------------- flags
+
+# The flag cloth is baked into the flag-top tile, so swap that tile for two
+# sprites (pole and cloth) to be able to slide the cloth down the pole.
+func _setup_flags() -> void:
+	var tilemap := get_node_or_null("TileMap") as TileMap
+	if not tilemap:
+		return
+	for layer in tilemap.get_layers_count():
+		for cell in tilemap.get_used_cells_by_id(layer, -1, FLAG_TOP):
+			var base := cell + Vector2i.DOWN
+			while base.y < cell.y + 32 and tilemap.get_cell_atlas_coords(layer, base) != FLAG_BASE:
+				base += Vector2i.DOWN
+			tilemap.erase_cell(layer, cell)
+			var top_left := tilemap.map_to_local(cell) - Vector2(8, 8)
+			# Pole and knob: columns 0-5 of the tile. Cloth: columns 6-15, rows 4-13.
+			tilemap.add_child(_tile_sprite(Rect2(160, 48, 6, 16), top_left))
+			var cloth := _tile_sprite(Rect2(166, 52, 10, 10), top_left + Vector2(6, 4))
+			tilemap.add_child(cloth)
+			var lowest := tilemap.map_to_local(base).y - 8.0 - 10.0
+			_flags.append([cloth, lowest])
+
+func _tile_sprite(region: Rect2, at: Vector2) -> Sprite2D:
+	var sprite := Sprite2D.new()
+	sprite.texture = WORLD_TILES
+	sprite.region_enabled = true
+	sprite.region_rect = region
+	sprite.centered = false
+	sprite.position = at
+	return sprite
+
+func _lower_flags() -> void:
+	for flag in _flags:
+		var cloth: Sprite2D = flag[0]
+		var tween := cloth.create_tween()
+		tween.tween_property(cloth, "position:y", flag[1], 1.2) \
+			.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 
 func _snap_camera() -> void:
 	var camera := get_node_or_null("Camera2D") as Camera2D
@@ -276,9 +323,9 @@ func _build_hud() -> void:
 		_hearts.append(heart)
 	left.add_child(health_row)
 
-	_sword_row = _make_power_row(SWORD_ICON, "LEFT CLICK")
+	_sword_row = _make_power_row(SWORD_ICON, "SWORD")
 	left.add_child(_sword_row)
-	_double_jump_row = _make_power_row(DOUBLE_JUMP_ICON, "SPACE IN THE AIR")
+	_double_jump_row = _make_power_row(DOUBLE_JUMP_ICON, "DOUBLE JUMP")
 	left.add_child(_double_jump_row)
 
 	# Top right: RTX 5090 counter.
@@ -312,16 +359,6 @@ func _build_hud() -> void:
 	_message.modulate.a = 0.0
 	_message.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	root.add_child(_message)
-
-	var help := Label.new()
-	help.text = "A/D MOVE   SPACE JUMP   R RESTART   ESC MENU"
-	help.modulate = Color(1, 1, 1, 0.6)
-	help.anchor_top = 1.0
-	help.anchor_bottom = 1.0
-	help.offset_left = 16.0
-	help.offset_top = -36.0
-	help.offset_bottom = -12.0
-	root.add_child(help)
 
 	_win_screen = _build_win_screen()
 	_win_screen.hide()

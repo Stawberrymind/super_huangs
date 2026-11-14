@@ -10,8 +10,8 @@ const FONT = preload("res://assets/fonts/PixelOperator8-Bold.ttf")
 const TILE = { Power.SWORD: Vector2(5, 2), Power.DOUBLE_JUMP: Vector2(8, 2) }
 const POWER_NAME = { Power.SWORD: "sword", Power.DOUBLE_JUMP: "double_jump" }
 const MESSAGE = {
-	Power.SWORD: "Sword! Left click to swing it",
-	Power.DOUBLE_JUMP: "Double jump! Press SPACE again in the air",
+	Power.SWORD: "You got the sword!",
+	Power.DOUBLE_JUMP: "You got the double jump!",
 }
 
 @export var power: Power = Power.DOUBLE_JUMP

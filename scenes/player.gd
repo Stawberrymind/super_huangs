@@ -132,6 +132,16 @@ func hurt(from_x: float) -> bool:
 		_die()
 	return true
 
+## Instant death (falling out of the level).
+func kill() -> void:
+	if _dead or _bouncing or _auto_walk:
+		return
+	health = 0
+	health_changed.emit(health)
+	_play_sound("hurt")
+	velocity = Vector2.ZERO
+	_die()
+
 func _die() -> void:
 	_dead = true
 	await get_tree().create_timer(1.0).timeout
