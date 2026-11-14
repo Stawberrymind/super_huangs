@@ -23,15 +23,32 @@ var _fullscreen_button: Button
 func _ready() -> void:
 	RenderingServer.set_default_clear_color(Color(0.05, 0.06, 0.07))
 
+	var first_button: Button = null
 	for i in Levels.LIST.size():
 		var level: Dictionary = Levels.LIST[i]
 		var button := Button.new()
 		button.text = "Level %d - %s" % [i + 1, level["name"]]
+		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		var saved := Progress.get_level(i + 1)
 		if not saved.is_empty():
 			button.text += "   BEST %s" % Progress.format_time(saved["best_time"])
 		button.pressed.connect(_start_level.bind(level["scene"]))
-		_buttons.add_child(button)
+		if first_button == null:
+			first_button = button
+
+		# The level button with its three stars next to it.
+		var row := HBoxContainer.new()
+		row.add_theme_constant_override("separation", 6)
+		row.add_child(button)
+		var stars: int = saved.get("stars", 0)
+		for bit in 3:
+			var star := TextureRect.new()
+			star.texture = Progress.star_texture(stars & (1 << bit) != 0)
+			star.custom_minimum_size = Vector2(27, 27)
+			star.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+			star.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+			row.add_child(star)
+		_buttons.add_child(row)
 
 	_controls_button = Button.new()
 	_controls_button.text = "Controls"
@@ -49,7 +66,7 @@ func _ready() -> void:
 	add_child(_controls_screen)
 
 	# Lets the menu be driven with the keyboard / a controller as well.
-	_buttons.get_child(0).grab_focus()
+	first_button.grab_focus()
 
 func _unhandled_key_input(event: InputEvent) -> void:
 	if event.pressed and not event.echo and event.keycode == KEY_ESCAPE and _controls_screen.visible:

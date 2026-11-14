@@ -42,6 +42,10 @@ var _auto_walk_x := 0.0
 
 var _sword_pivot: Node2D
 var _sword_area: Area2D
+var _base_scale := Vector2.ONE
+var _base_sprite_y := 0.0
+var _squash_tween: Tween
+var _fall_speed := 0.0
 
 @onready var _sprite: AnimatedSprite2D = $AnimatedSprite2D
 
@@ -50,6 +54,8 @@ func _ready() -> void:
 	spawn_position = global_position
 	collision_layer = LAYER_PLAYER
 	collision_mask = LAYER_WORLD | LAYER_SOLID_ENEMY
+	_base_scale = _sprite.scale
+	_base_sprite_y = _sprite.position.y
 	_build_sword()
 
 func _physics_process(delta: float) -> void:
@@ -84,10 +90,14 @@ func _physics_process(delta: float) -> void:
 		# Jump with Space (and once more in the air with the double jump)
 		if jump_down and is_on_floor():
 			velocity.y = JUMP_VELOCITY
+			_squash(Vector2(0.75, 1.3))
+			_puff(Vector2(0, 0), 6)
 		elif jump_down and not _jump_was_down and not is_on_floor() \
 				and has_double_jump and not _used_double_jump:
 			velocity.y = JUMP_VELOCITY
 			_used_double_jump = true
+			_squash(Vector2(0.75, 1.3))
+			_puff(Vector2(0, -4), 8, Color(0.75, 1.0, 0.5))
 
 		# WASD movement
 		var direction := 0
@@ -108,7 +118,40 @@ func _physics_process(delta: float) -> void:
 	_click_was_down = click_down
 
 	_update_sword(delta)
+	var was_on_floor := is_on_floor()
+	if not was_on_floor:
+		_fall_speed = velocity.y
 	move_and_slide()
+	# Landing: squash and a puff of dust, bigger for bigger falls.
+	if is_on_floor() and not was_on_floor and _fall_speed > 120.0:
+		var amount := clampf((_fall_speed - 120.0) / 300.0, 0.0, 1.0)
+		_squash(Vector2(1.0 + 0.4 * amount, 1.0 - 0.35 * amount))
+		_puff(Vector2(0, 0), 4 + int(6 * amount))
+		if _fall_speed > 420.0:
+			var level := get_tree().get_first_node_in_group("level")
+			if level:
+				level.shake(2.0, 0.12)
+
+# ---------------------------------------------------------------- juice
+
+## Squash/stretch the knight's sprite and spring back. Keeps his feet planted.
+func _squash(amount: Vector2) -> void:
+	if _squash_tween:
+		_squash_tween.kill()
+	_set_squash(amount)
+	_squash_tween = create_tween()
+	_squash_tween.tween_method(_set_squash, amount, Vector2.ONE, 0.22) \
+		.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+
+func _set_squash(amount: Vector2) -> void:
+	_sprite.scale = _base_scale * amount
+	# The sprite is centred 14 px above the feet: move it so the feet stay put.
+	_sprite.position.y = _base_sprite_y * amount.y
+
+func _puff(offset: Vector2, amount: int, colour: Color = Color(0.85, 0.8, 0.7)) -> void:
+	var level := get_tree().get_first_node_in_group("level")
+	if level:
+		level.spawn_puff(global_position + offset, colour, amount, 35.0, 0.3, true)
 
 # ---------------------------------------------------------------- health
 

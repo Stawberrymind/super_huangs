@@ -49,6 +49,7 @@ blonde = true
 
 [node name="Duck2" parent="." instance=ExtResource("7_duck")]
 position = Vector2(232, 0)
+jumper = true
 patrol_distance = 36.0
 
 [node name="Coin1" parent="." instance=ExtResource("6_coin")]

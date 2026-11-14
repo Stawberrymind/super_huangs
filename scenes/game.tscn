@@ -8,6 +8,7 @@
 [ext_resource type="PackedScene" path="res://scenes/coin.tscn" id="6_coin"]
 [ext_resource type="PackedScene" path="res://scenes/duck.tscn" id="7_duck"]
 [ext_resource type="PackedScene" path="res://scenes/bounce_box.tscn" id="8_box"]
+[ext_resource type="PackedScene" path="res://scenes/scalper.tscn" id="9_scalper"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_lnu2h"]
 texture = ExtResource("2_yqjtg")
@@ -242,6 +243,7 @@ patrol_distance = 30.0
 
 [node name="Duck2" parent="." instance=ExtResource("7_duck")]
 position = Vector2(520, -48)
+jumper = true
 patrol_distance = 20.0
 
 [node name="Duck3" parent="." instance=ExtResource("7_duck")]
@@ -283,3 +285,7 @@ position = Vector2(792, -104)
 
 [node name="Coin12" parent="." instance=ExtResource("6_coin")]
 position = Vector2(856, -104)
+
+[node name="Scalper1" parent="." instance=ExtResource("9_scalper")]
+position = Vector2(840, -80)
+patrol_distance = 24.0

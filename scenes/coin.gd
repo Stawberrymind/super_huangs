@@ -23,5 +23,5 @@ func _on_body_entered(body: Node2D) -> void:
 		return
 	var level := get_tree().get_first_node_in_group("level")
 	if level:
-		level.collect_coin()
+		level.collect_coin(global_position)
 	queue_free()

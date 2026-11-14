@@ -8,6 +8,7 @@
 [ext_resource type="PackedScene" path="res://scenes/coin.tscn" id="6_coin"]
 [ext_resource type="PackedScene" path="res://scenes/duck.tscn" id="7_duck"]
 [ext_resource type="PackedScene" path="res://scenes/bounce_box.tscn" id="8_box"]
+[ext_resource type="PackedScene" path="res://scenes/scalper.tscn" id="9_scalper"]
 
 [node name="level_4" type="Node2D"]
 script = ExtResource("1_level")
@@ -53,6 +54,7 @@ patrol_distance = 16.0
 
 [node name="Duck3" parent="." instance=ExtResource("7_duck")]
 position = Vector2(824, -32)
+jumper = true
 patrol_distance = 24.0
 
 [node name="Duck4" parent="." instance=ExtResource("7_duck")]
@@ -123,3 +125,7 @@ position = Vector2(1128, -24)
 
 [node name="Coin19" parent="." instance=ExtResource("6_coin")]
 position = Vector2(1208, -40)
+
+[node name="Scalper1" parent="." instance=ExtResource("9_scalper")]
+position = Vector2(1224, -16)
+patrol_distance = 24.0

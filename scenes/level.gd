@@ -45,6 +45,7 @@ var princess_rescued := false
 var coins := 0
 var total_coins := 0
 var elapsed := 0.0   # level timer, saved as the best time
+var deaths := 0
 
 var _player: CharacterBody2D
 var _princess: CharacterBody2D
@@ -65,12 +66,23 @@ var _message_tween: Tween
 var _win_screen: Control
 var _win_coins: Label
 var _flags: Array = []   # [cloth sprite, y to lower it to]
+var _win_stars: HBoxContainer
+var _win_star_labels: Array = []
+var _last_health := 0
+var _coin_combo := 0
+var _last_coin_time := -10.0
+var _shake_strength := 0.0
+var _shake_time := 0.0
+var _shake_total := 0.0
+var _camera: Camera2D
 
 func _ready() -> void:
 	add_to_group("level")
+	Engine.time_scale = 1.0
 	RenderingServer.set_default_clear_color(background_color)
 	_player = $Player
 	_princess = $Princess
+	_camera = get_node_or_null("Camera2D") as Camera2D
 	total_coins = get_tree().get_nodes_in_group("coins").size()
 
 	if sky == 1:
@@ -83,6 +95,8 @@ func _ready() -> void:
 	_player.health_changed.connect(_update_health)
 	_player.powers_changed.connect(_update_powers)
 	_player.respawned.connect(_snap_camera)
+	_player.respawned.connect(func() -> void: deaths += 1)
+	_last_health = _player.health
 	_update_health(_player.health)
 	_update_powers()
 	_update_coins()
@@ -106,6 +120,7 @@ func _physics_process(delta: float) -> void:
 
 func _process(delta: float) -> void:
 	_timer_label.text = Progress.format_time(elapsed)
+	_update_shake(delta)
 	# Little hearts above the two of them once they have met.
 	if princess_rescued and not completed:
 		_love_time -= delta
@@ -127,14 +142,32 @@ func _unhandled_key_input(event: InputEvent) -> void:
 
 # ---------------------------------------------------------------- used by coins, boxes, ducks, the knight
 
-func collect_coin() -> void:
+## `at` is where the RTX 5090 was, for the sparkle. Grabbing several in a
+## row raises the pitch of the pickup sound.
+func collect_coin(at: Vector2 = Vector2.INF) -> void:
 	coins += 1
 	_update_coins()
-	play_sound("coin")
+	var now := Time.get_ticks_msec() / 1000.0
+	_coin_combo = _coin_combo + 1 if now - _last_coin_time < 1.5 else 0
+	_last_coin_time = now
+	play_sound("coin", 1.0 + mini(_coin_combo, 8) * 0.08)
+	if at != Vector2.INF:
+		spawn_puff(at, GREEN.lightened(0.3), 10, 60.0, 0.45)
+	_bump(_coin_label)
 
-func play_sound(sound: String) -> void:
+## Scalpers call this. Returns false if there was nothing to steal.
+func steal_coin() -> bool:
+	if coins <= 0:
+		return false
+	coins -= 1
+	_update_coins()
+	_bump(_coin_label)
+	return true
+
+func play_sound(sound: String, pitch: float = 1.0) -> void:
 	var player := AudioStreamPlayer.new()
 	player.stream = SOUNDS[sound]
+	player.pitch_scale = pitch
 	player.volume_db = -8.0
 	player.finished.connect(player.queue_free)
 	add_child(player)
@@ -151,6 +184,64 @@ func show_message(text: String, seconds: float = 2.5) -> void:
 	_message_tween = create_tween()
 	_message_tween.tween_interval(seconds)
 	_message_tween.tween_property(_message, "modulate:a", 0.0, 0.5)
+
+# ---------------------------------------------------------------- juice
+
+## A burst of little square particles (dust, sparkles, feathers).
+func spawn_puff(at: Vector2, colour: Color, amount: int = 8, speed: float = 40.0,
+		lifetime: float = 0.35, upwards: bool = false) -> void:
+	var particles := CPUParticles2D.new()
+	particles.one_shot = true
+	particles.emitting = false
+	particles.amount = amount
+	particles.lifetime = lifetime
+	particles.explosiveness = 1.0
+	particles.direction = Vector2.UP
+	particles.spread = 70.0 if upwards else 180.0
+	particles.initial_velocity_min = speed * 0.4
+	particles.initial_velocity_max = speed
+	particles.gravity = Vector2(0, 120)
+	particles.scale_amount_min = 1.0
+	particles.scale_amount_max = 2.0
+	particles.color = colour
+	var fade := Gradient.new()
+	fade.set_color(0, colour)
+	fade.set_color(1, Color(colour, 0.0))
+	particles.color_ramp = fade
+	particles.position = at
+	particles.z_index = 5
+	add_child(particles)
+	particles.emitting = true
+	get_tree().create_timer(lifetime + 0.2, false).timeout.connect(particles.queue_free)
+
+## Shakes the camera for `seconds`, fading out.
+func shake(strength: float, seconds: float = 0.2) -> void:
+	if strength >= _shake_strength * (_shake_time / maxf(_shake_total, 0.001)):
+		_shake_strength = strength
+		_shake_time = seconds
+		_shake_total = seconds
+
+## Freezes the game for a moment so a hit feels heavier.
+func hit_stop(seconds: float = 0.06) -> void:
+	Engine.time_scale = 0.05
+	await get_tree().create_timer(seconds, true, false, true).timeout
+	Engine.time_scale = 1.0
+
+func _update_shake(delta: float) -> void:
+	if not _camera:
+		return
+	if _shake_time > 0.0:
+		_shake_time -= delta
+		var s := _shake_strength * maxf(_shake_time, 0.0) / _shake_total
+		_camera.offset = Vector2(randf_range(-s, s), randf_range(-s, s)).round()
+	else:
+		_camera.offset = Vector2.ZERO
+
+func _bump(control: Control) -> void:
+	control.pivot_offset = control.size / 2.0
+	var tween := control.create_tween()
+	tween.tween_property(control, "scale", Vector2(1.3, 1.3), 0.06)
+	tween.tween_property(control, "scale", Vector2.ONE, 0.12)
 
 # ---------------------------------------------------------------- princess and castle
 
@@ -232,7 +323,8 @@ func _update_ending(delta: float) -> void:
 func _complete() -> void:
 	completed = true
 	var best := Progress.get_level(level_number)
-	var new_best := Progress.record(level_number, elapsed, coins, total_coins)
+	var stars := _earned_stars()
+	var new_best := Progress.record(level_number, elapsed, coins, total_coins, stars)
 	await get_tree().create_timer(0.8).timeout
 	var time_text := "Time: %s" % Progress.format_time(elapsed)
 	if new_best and not best.is_empty():
@@ -240,6 +332,10 @@ func _complete() -> void:
 	elif not best.is_empty():
 		time_text += "  (best %s)" % Progress.format_time(best["best_time"])
 	_win_coins.text = "RTX 5090s: %d/%d\n%s" % [coins, total_coins, time_text]
+	for i in 3:
+		var star: TextureRect = _win_stars.get_child(i)
+		star.texture = Progress.star_texture(stars & (1 << i) != 0)
+	_win_star_labels[2].text = "UNDER %s" % Progress.format_time(_par_time())
 	_win_screen.show()
 	var buttons := _win_screen.find_children("*", "Button", true, false)
 	for button in buttons:
@@ -284,6 +380,20 @@ func _lower_flags() -> void:
 		tween.tween_property(cloth, "position:y", flag[1], 1.2) \
 			.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 
+## Bit 0: finished. Bit 1: no deaths. Bit 2: beat the par time.
+func _earned_stars() -> int:
+	var stars := 1
+	if deaths == 0:
+		stars |= 2
+	if elapsed <= _par_time():
+		stars |= 4
+	return stars
+
+func _par_time() -> float:
+	if level_number >= 1 and level_number <= Levels.LIST.size():
+		return float(Levels.LIST[level_number - 1].get("par", 120.0))
+	return 120.0
+
 func _snap_camera() -> void:
 	var camera := get_node_or_null("Camera2D") as Camera2D
 	if camera:
@@ -293,14 +403,22 @@ func _has_next_level() -> bool:
 	return level_number < Levels.LIST.size()
 
 func _go_to_next_level() -> void:
+	Engine.time_scale = 1.0
 	get_tree().change_scene_to_file(Levels.LIST[level_number]["scene"])
 
 func _go_to_menu() -> void:
+	Engine.time_scale = 1.0
 	get_tree().change_scene_to_file(Levels.MAIN_MENU)
 
 # ---------------------------------------------------------------- HUD
 
 func _update_health(health: int) -> void:
+	if health < _last_health:
+		shake(5.0, 0.3)
+		spawn_puff(_player.global_position + Vector2(0, -14), Color(1, 0.35, 0.35), 10, 70.0)
+		if _hearts.size() > health:
+			_bump(_hearts[health])
+	_last_health = health
 	for i in _hearts.size():
 		_hearts[i].modulate = Color.WHITE if i < health else Color(0.2, 0.2, 0.22, 0.7)
 
@@ -437,6 +555,35 @@ func _build_win_screen() -> Control:
 	sub.text = "You've rescued the princess."
 	sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	box.add_child(sub)
+
+	_win_stars = HBoxContainer.new()
+	_win_stars.alignment = BoxContainer.ALIGNMENT_CENTER
+	_win_stars.add_theme_constant_override("separation", 24)
+	box.add_child(_win_stars)
+	var star_names := ["FINISHED", "NO DEATHS", "UNDER TIME"]
+	var star_icons := []
+	for i in 3:
+		var icon := TextureRect.new()
+		icon.custom_minimum_size = Vector2(54, 54)
+		icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		star_icons.append(icon)
+		_win_stars.add_child(icon)
+	var legend := HBoxContainer.new()
+	legend.alignment = BoxContainer.ALIGNMENT_CENTER
+	legend.add_theme_constant_override("separation", 24)
+	for i in 3:
+		var label := Label.new()
+		label.text = star_names[i]
+		label.custom_minimum_size.x = 120
+		label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		label.add_theme_font_size_override("font_size", 12)
+		label.modulate = Color(1, 1, 1, 0.7)
+		legend.add_child(label)
+		_win_star_labels.append(label)
+	for icon in star_icons:
+		icon.custom_minimum_size.x = 120
+	box.add_child(legend)
 
 	_win_coins = Label.new()
 	_win_coins.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
