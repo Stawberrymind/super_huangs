@@ -22,6 +22,7 @@ const FLAG_BASE := Vector2i(10, 7)
 const SOUNDS = {
 	"coin": preload("res://assets/sounds/coin.wav"),
 	"hurt": preload("res://assets/sounds/hurt.wav"),
+	"faah": preload("res://assets/sounds/faah.wav"),
 	"power_up": preload("res://assets/sounds/power_up.wav"),
 	"tap": preload("res://assets/sounds/tap.wav"),
 	"explosion": preload("res://assets/sounds/explosion.wav"),
@@ -56,6 +57,7 @@ var _love_turn := 0
 
 var _hearts: Array = []
 var _coin_label: Label
+var _timer_label: Label
 var _sword_row: Control
 var _double_jump_row: Control
 var _message: Label
@@ -103,6 +105,7 @@ func _physics_process(delta: float) -> void:
 			_start_ending()
 
 func _process(delta: float) -> void:
+	_timer_label.text = Progress.format_time(elapsed)
 	# Little hearts above the two of them once they have met.
 	if princess_rescued and not completed:
 		_love_time -= delta
@@ -362,6 +365,18 @@ func _build_hud() -> void:
 	right.add_child(_make_icon(gpu_icon, Vector2(32, 32)))
 	_coin_label = Label.new()
 	right.add_child(_coin_label)
+
+	# Top middle: live timer.
+	_timer_label = Label.new()
+	_timer_label.anchor_right = 1.0
+	_timer_label.offset_top = 12.0
+	_timer_label.offset_bottom = 40.0
+	_timer_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_timer_label.add_theme_font_size_override("font_size", 24)
+	_timer_label.add_theme_color_override("font_outline_color", Color(0.05, 0.06, 0.07))
+	_timer_label.add_theme_constant_override("outline_size", 8)
+	_timer_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	root.add_child(_timer_label)
 
 	# Top middle: messages.
 	_message = Label.new()

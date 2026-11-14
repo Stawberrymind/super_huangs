@@ -119,7 +119,7 @@ func hurt(from_x: float) -> bool:
 		return false
 	health -= 1
 	health_changed.emit(health)
-	_play_sound("hurt")
+	_play_sound("faah")
 
 	var away: float = sign(global_position.x - from_x)
 	if away == 0.0:
@@ -138,7 +138,7 @@ func kill() -> void:
 		return
 	health = 0
 	health_changed.emit(health)
-	_play_sound("hurt")
+	_play_sound("faah")
 	velocity = Vector2.ZERO
 	_die()
 
